@@ -8,10 +8,19 @@ var multer  = require('multer')
 //     return req.file.filename;
 // }})
 
+app.use(bodyParser.urlencoded())
+
 // Worked
 var storage = multer.diskStorage({
     destination: function (req, file, cb) {
-      cb(null, 'uploads/')
+        console.log(req.headers.filename)
+        let a = 'uploads/' + req.headers.filename;
+        if (!fs.existsSync(a)) {
+            fs.mkdirSync(a, 0744);
+            cb(null, a)
+        } else {
+            cb(null, a)
+        }
     },
     filename: function (req, file, cb) {
       cb(null, file.originalname)
@@ -20,6 +29,7 @@ var storage = multer.diskStorage({
   
 var upload = multer({ storage: storage })
 
+
 app.use(function (req, res, next) {
     console.log('Time:', Date.now());
     next();
@@ -27,7 +37,7 @@ app.use(function (req, res, next) {
 
 app.use('/static', express.static('uploads'))
 
-
+// Convert Image Base64 Not worked. So better to save that image to file
 app.get('/', (req, res) => {
     // res.send("Hello")
     let as = fs.readFileSync('save.txt', 'utf8');
@@ -36,6 +46,7 @@ app.get('/', (req, res) => {
     res.sendFile(as)
 })
 
+// Send Image to save and upload
 app.post("/api/photo", upload.single('userPhoto'), function(req,res){
     console.log(req.file)
     let a = fs.readFileSync(req.file.path)
